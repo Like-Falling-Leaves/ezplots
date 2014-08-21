@@ -21,13 +21,13 @@ do
     rm themes.json
 done &&
 
-if [ ! -f ./vendor/jQuery.js ]; then
-  mkdir -p vendor &&
-  curl -o ./vendor/jQuery.js http://code.jquery.com/jquery-1.11.1.min.js
+if [ ! -f ../pages/vendor/jQuery.js ]; then
+  mkdir -p ../pages/vendor &&
+  curl -o ../pages/vendor/jQuery.js http://code.jquery.com/jquery-1.11.1.min.js
 fi &&
 
 echo "[]" > themes.json &&
-browserify -o ../dist/bar.html.js bar.html.js &&
+browserify -o ../dist/bar.html.js ../pages/bar.html.js &&
 rm themes.json &&
 
 for ff in bar.*.less

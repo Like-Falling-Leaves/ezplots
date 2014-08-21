@@ -1,1 +1,2 @@
-jQuery/vendor/
+pages/vendor/
+dist/*.html.js
