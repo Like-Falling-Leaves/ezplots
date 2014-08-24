@@ -1,0 +1,46 @@
+.ezbar {
+  width: 100%;
+  position: relative;
+  font-family: helvetica, arial, sans-serif;
+  font-size: 18px;
+  font-weight: 100;
+}
+.ezbar-bg,
+.ezbar-fg {
+  width: 100%;
+  table-layout: fixed;
+}
+.ezbar-fg,
+.ezbar-fg td {
+  border-color: transparent;
+}
+.ezbar-bg .name,
+.ezbar-fg .name {
+  padding: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.ezbar-bg .name {
+  color: #d2d2d2;
+  background: #000000;
+}
+.ezbar-fg .name {
+  color: #000000;
+  background: #d2d2d2;
+}
+.ezbar-bg .value {
+  color: #ffffff;
+  background: #000000;
+}
+.ezbar-fg .value {
+  opacity: 0;
+  background: transparent;
+}
+.ezbar-fg {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.ezbar {
+  background: black;
+}

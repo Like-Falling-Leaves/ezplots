@@ -3,33 +3,34 @@
 // Simple bar charts
 //
 
-module.exports = bar;
 var themes = require('./themes.json');
+var series = require('./series.js');
+var utils = require('./utils.js');
+
+module.exports = bar;
 
 if (typeof(window) != 'undefined') {
   window.ezplots = window.ezplots || {};
   window.ezplots.bar = bar;
-  applyThemes(window.ezplots);
+  applyThemes(window.ezplots, '');
 
   var jQuery = window.jQuery || window.$;
   if (jQuery) {
     jQuery.fn.ezbar = bar;
-    applyThemes(jQuery.fn);
+    applyThemes(jQuery.fn, '');
   }
 }
 
-function applyThemes(obj) {
-  for (var kk = 0; kk < themes.length; kk ++) obj[themes.replace(/[.]/g, '_')] = getThemedBar(theme);
+function applyThemes(obj, prefix) {
+  for (var kk = 0; kk < themes.length; kk ++) {
+    obj[prefix + themes[kk].replace(/[.]/g, '_')] = getThemedBar(themes[kk]);
+  }
 }
 
 function getThemedBar(theme) {
   return function (data, container, $) {
-    var css = '/s/' + theme + '.min.css';
-    theme = theme.replace(/[.]/g, '_');
     $ = $ || window.jQuery || window.$;
-    if (!$('link#' + theme).length) {
-      $('<link>', {id: theme, type: 'text/css', rel:'stylesheet'}).appendTo($('head')).attr('href', css);
-    }
+    utils.loadTheme($, theme);
     return bar.call(this, data, container, $);
   };
 }
@@ -38,23 +39,23 @@ function bar(data, container, $) {
   $ = $ || window.jQuery || window.$;
   container = container || (this && $(this));
 
-  var normalized = normalize(data || parseTable(this, $));
-  if (!normalized.length) return;
+  var normalized = series.normalize(data || series.parseTable(this, $));
+  if (!normalized.length) return this;
 
   container = $('<div>', {'class': 'ezbar'}).appendTo(container);
   var bgtable = $('<table>', {'class': 'ezbar-bg'}).appendTo(container);
   var fgtable = $('<table>', {'class': 'ezbar-fg'}).appendTo(container);
-  var minmax = getMinMax(normalized);
+  var minmax = series.getMinMax(normalized);
   var converted = normalized;
   var fixed = false;
 
   if (minmax.max == minmax.min) {
     fixed = true;
   } else if (minmax.min < 0 ) {
-    converted = transform(normalized, -minmax.min, 50, (minmax.max - minmax.min));
-    minmax = getMinMax(converted);
+    converted = series.transform(normalized, -minmax.min, 50, (minmax.max - minmax.min));
+    minmax = series.getMinMax(converted);
   } else {
-    converted = transform(normalized, 0, 50, minmax.max);
+    converted = series.transform(normalized, 0, 50, minmax.max);
   }
 
   for (var kk = 0; kk < normalized.length; kk ++) {
@@ -76,6 +77,15 @@ function bar(data, container, $) {
   return this;
 }
 
+},{"./series.js":2,"./themes.json":3,"./utils.js":4}],2:[function(require,module,exports){
+//
+// Helper routines to parse/transform series data.
+//
+
+module.exports.transform = transform;
+module.exports.getMinMax = getMinMax;
+module.exports.normalize = normalize;
+module.exports.parseTable = parseTable;
                    
 function transform(data, translate, multiply, divide, roundf) {
   var ret = [];
@@ -164,7 +174,35 @@ function parseTable(container, $) {
   });
 }
 
-},{"./themes.json":2}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 module.exports=[ "bar.orange" ]
+
+},{}],4:[function(require,module,exports){
+//
+// Kitchen sink
+//
+
+module.exports.getScriptPath = getScriptPath;
+module.exports.loadTheme = loadTheme;
+
+function getScriptPath($, regex, replace) {
+  var ret = [];
+  $('script').each(function () {
+    var src = $(this).attr('src');
+    if (regex.test(src)) ret.push(src.replace(regex, replace));
+  });
+  return ret;
+}
+
+function loadTheme($, theme) {
+  var template = theme.split('.')[0];
+  var id = theme.replace('.', '_');
+  var css = theme + '.min.css'
+
+  if ($('link#' + id).length) return;
+  css = getScriptPath($, new RegExp(template + '[^/]*.js$'), css) || css;
+  return $('<link>', {id:id, rel: 'stylesheet'}).appendTo($('head')).attr('href', css);
+}
+
 
 },{}]},{},[1])

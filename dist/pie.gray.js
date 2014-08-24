@@ -1,80 +1,70 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 //
-// Simple bar charts
+// Simple pie charts
 //
 
+module.exports = pie;
 var themes = require('./themes.json');
 var series = require('./series.js');
 var utils = require('./utils.js');
 
-module.exports = bar;
-
 if (typeof(window) != 'undefined') {
   window.ezplots = window.ezplots || {};
-  window.ezplots.bar = bar;
+  window.ezplots.pie = pie;
   applyThemes(window.ezplots, '');
 
   var jQuery = window.jQuery || window.$;
   if (jQuery) {
-    jQuery.fn.ezbar = bar;
-    applyThemes(jQuery.fn, '');
+    jQuery.fn.ezpie = pie;
+    applyThemes(jQuery.fn, 'ez');
   }
 }
 
 function applyThemes(obj, prefix) {
   for (var kk = 0; kk < themes.length; kk ++) {
-    obj[prefix + themes[kk].replace(/[.]/g, '_')] = getThemedBar(themes[kk]);
+    obj[prefix + themes[kk].replace(/[.]/g, '_')] = getThemedPie(themes[kk]);
   }
 }
 
-function getThemedBar(theme) {
+function getThemedPie(theme) {
   return function (data, container, $) {
     $ = $ || window.jQuery || window.$;
     utils.loadTheme($, theme);
-    return bar.call(this, data, container, $);
+    return pie.call(this, data, container, $);
   };
 }
 
-function bar(data, container, $) {
+function pie(data, container, $) {
   $ = $ || window.jQuery || window.$;
   container = container || (this && $(this));
 
-  var normalized = series.normalize(data || series.parseTable(this, $));
+  if (!window.google) {
+    window.loadPie = function () { setTimeout(function () { pie(data, container, $); }, 200); };
+    var url = '//google.com/jsapi?callback=loadPie&autoload={"modules":[{"name":"visualization","version":"1","callback": "console.log(42);","packages":["corechart","table"]}]}';
+    return $.ajax({dataType: 'script', cache: true, url: url});
+  }
+
+  var normalized = series.normalize(data || parseTable(this, $));
   if (!normalized.length) return this;
 
-  container = $('<div>', {'class': 'ezbar'}).appendTo(container);
-  var bgtable = $('<table>', {'class': 'ezbar-bg'}).appendTo(container);
-  var fgtable = $('<table>', {'class': 'ezbar-fg'}).appendTo(container);
-  var minmax = series.getMinMax(normalized);
-  var converted = normalized;
-  var fixed = false;
-
-  if (minmax.max == minmax.min) {
-    fixed = true;
-  } else if (minmax.min < 0 ) {
-    converted = series.transform(normalized, -minmax.min, 50, (minmax.max - minmax.min));
-    minmax = series.getMinMax(converted);
-  } else {
-    converted = series.transform(normalized, 0, 50, minmax.max);
-  }
-
-  for (var kk = 0; kk < normalized.length; kk ++) {
-    bgtable.append($('<tr>').append(
-      $('<td>', {'class': 'name', colspan: 50}).append(
-        $('<div>', {text: normalized[kk].name})
-      ),
-      $('<td>', {'class': 'value', colspan: 10, text: Math.round(normalized[kk].value).toString()})
-    ));
-    if (fixed) continue;
-    fgtable.append($('<tr>').append(
-      $('<td>', {'class': 'name', colspan: Math.round(converted[kk].value)}).append(
-        $('<div>', {text: normalized[kk].name})
-      ),
-      $('<td>', {'class': 'value', colspan: 60 - Math.round(converted[kk].value), text: ' '})
-    ));
-  }
+  if (!google.visualization || !google.visualization.PieChart) {
+    google.load("visualization", "1", {callback: 'console.log("loaded google visualization");', packages:["corechart"]});
+    google.setOnLoadCallback(function () { setTimeout(drawChart, 200); });
+  } else drawChart();
 
   return this;
+
+  function drawChart() {
+    container = $('<div>', {'class': 'ezpie'}).css({width: '100%', height: '100%'}).appendTo(container);
+    var chart = new google.visualization.PieChart(container[0]);
+    var options = {fontSize: '14', fontName: 'Helvetica, Arial', pieSliceText: 'value'};
+    options.chartArea = {width: '100%', top: 10};
+    options.legend = {position: (normalized.length <= 3 ? 'bottom' : 'left')};
+    var data = [['Name', 'Value']];
+    $.each(normalized, function (ii, nn) { data.push([nn.name, nn.value]); });
+    var table = new google.visualization.arrayToDataTable(data);
+    chart.draw(table, options);
+  }
 }
 
 },{"./series.js":2,"./themes.json":3,"./utils.js":4}],2:[function(require,module,exports){
@@ -175,7 +165,7 @@ function parseTable(container, $) {
 }
 
 },{}],3:[function(require,module,exports){
-module.exports=[ "bar.gray" ]
+module.exports=[ "pie.gray" ]
 
 },{}],4:[function(require,module,exports){
 //

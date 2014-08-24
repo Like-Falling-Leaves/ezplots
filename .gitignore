@@ -1,2 +1,3 @@
 pages/vendor/
 dist/*.html.js
+dist/*.html

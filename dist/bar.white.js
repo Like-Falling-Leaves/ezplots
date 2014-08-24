@@ -175,7 +175,7 @@ function parseTable(container, $) {
 }
 
 },{}],3:[function(require,module,exports){
-module.exports=[ "bar.gray" ]
+module.exports=[ "bar.white" ]
 
 },{}],4:[function(require,module,exports){
 //
